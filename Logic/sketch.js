@@ -1,54 +1,86 @@
-let hero;
+let heroSprite;
 let obstacles = [];
-let heroImg;
+let birdImg;
+let pipeImg;
+let GRAVITY = 0.3;
+let flapForce = -10;
+
+var micInput;
 
 function preload(){
-	heroImg = loadImage('assets/bird.png');
+	birdImg = loadImage('assets/bird1.png');
+	pipeImg = loadImage('assets/obstacle.png');
 }
 
 function setup() {
 	createCanvas(1000, 600);
-  hero = new Bird(100, 200, 20, 4);
-	obstacles.push(addObstacle());
-	testObstcale = new obstacle(100, 20,  height, 0);
+	heroSprite = createSprite(100,200,20,20);
+	heroSprite.addImage(birdImg);
+	
+	micInput = new p5.AudioIn();
+	micInput.start();
 }
 
 function draw() {
-	background(0);
-
-	hero.update(height);
-	hero.draw(heroImg);
-
-	for(let currentObstacle of obstacles){
-		currentObstacle.update(4);
-		currentObstacle.draw(height);
+	background(112,197,206);
+	
+	let vol = micInput.getLevel();
+	let normalisedVol = vol*100;
+	
+	if(normalisedVol>0.5){
+	flapForce = -normalisedVol;
+	flap();
 	}
-	if(frameCount % 120 == 0)
+	
+	heroSprite.velocity.y += GRAVITY;
+	
+	for(let currentObstacle of obstacles){
+		drawSprite(currentObstacle);
+		currentObstacle.position.x -= 4;
+	}
+	
+	if(frameCount % 120 == 0){
 		obstacles.push(addObstacle());
-
-	for(let currentObstacle of obstacles){
-		if(currentObstacle.collide(hero)){
-			print("a55555 lbs");
-			noLoop();
-		}
 	}
-
+	
+	for(let currentObstacle of obstacles){
+		if(heroSprite.collide(currentObstacle)){
+			print("GAME OVER !");
+			noLoop();
+		}	
+	}
+	
+	drawSprite(heroSprite);
 	removeObstacles();
 }
 
-function keyPressed()
-{
-	if(keyCode == UP_ARROW)
-		hero.fly();
-}
-
 function addObstacle(){
-	let newObstacle = new obstacle(width + 50, 25, random(200, height - 100), floor(random(2)));
+	let pos = floor(random(2));
+	let newObstacle;
+	let obstacleHeight = random(50,  100);
+
+	if(pos == 0){ // up
+		newObstacle = createSprite(width +50, 0, 25, obstacleHeight);
+		newObstacle.mirrorY(-1);
+	} 
+	else { //down
+		newObstacle = createSprite(width+50, height - obstacleHeight, 25, obstacleHeight);
+	}
+		
+	newObstacle.addImage(pipeImg);
 	return newObstacle;
 }
 
-function 	removeObstacles(){
+function removeObstacles(){
 	while (obstacles.length > 0 && obstacles[0].x + obstacles[0].w < 0) {
 		obstacles.shift();
 	}
+}
+
+function flap(){
+	heroSprite.velocity.y = flapForce;
+}
+function mousePressed(){
+	console.log("FLAP");
+	
 }
